@@ -90,7 +90,8 @@ sys_uptime(void)
   return xticks;
 }
 
-int sys_date(void)
+int 
+sys_date(void)
 {
 	char* pr;
 

@@ -9,19 +9,19 @@ struct elfhdr {
   ushort type;
   ushort machine;
   uint version;
-  uint entry;
-  uint phoff;
-  uint shoff;
+  uint entry;  // entry point 
+  uint phoff;  // start of program headers
+  uint shoff;  // start of section headers
   uint flags;
-  ushort ehsize;
-  ushort phentsize;
-  ushort phnum;
-  ushort shentsize;
-  ushort shnum;
-  ushort shstrndx;
+  ushort ehsize;     // size of this header
+  ushort phentsize;  // size of a program header
+  ushort phnum;      // number of program headers
+  ushort shentsize;  // size of a section header 
+  ushort shnum;      // number of section headers
+  ushort shstrndx;   // section header string table index
 };
 
-// Program section header
+// Program header
 struct proghdr {
   uint type;
   uint off;
