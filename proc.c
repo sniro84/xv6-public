@@ -370,6 +370,9 @@ sleep(void *chan, struct spinlock *lk)
   if(lk != &ptable.lock){  //DOC: sleeplock0
     acquire(&ptable.lock);  //DOC: sleeplock1
     release(lk);
+
+    // order is important here for avoiding 
+    // lost wake-up problem(deadlock)
   }
 
   // Go to sleep.
@@ -384,6 +387,11 @@ sleep(void *chan, struct spinlock *lk)
   if(lk != &ptable.lock){  //DOC: sleeplock2
     release(&ptable.lock);
     acquire(lk);
+
+    // the order here is also important
+    // if we acquire first and there's 
+    // another sleeper, a deadlock may
+    // occur.
   }
 }
 
