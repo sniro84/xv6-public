@@ -59,6 +59,7 @@ binit(void)
 // Look through buffer cache for block on device dev.
 // If not found, allocate a buffer.
 // In either case, return B_BUSY buffer.
+// Only called in bread
 static struct buf*
 bget(uint dev, uint blockno)
 {
@@ -75,6 +76,8 @@ bget(uint dev, uint blockno)
         release(&bcache.lock);
         return b;
       }
+      // if a process calls bread twice before brelse, 
+      // it will fall asleep and never wakeup (deadlock)
       sleep(b, &bcache.lock);
       goto loop;
     }
@@ -105,6 +108,7 @@ bread(uint dev, uint blockno)
   if(!(b->flags & B_VALID)) {
     iderw(b);
   }
+  // B_VALID and B_BUSY
   return b;
 }
 
@@ -116,6 +120,7 @@ bwrite(struct buf *b)
     panic("bwrite");
   b->flags |= B_DIRTY;
   iderw(b);
+  // B_VALID and B_BUSY
 }
 
 // Release a B_BUSY buffer.
@@ -137,6 +142,9 @@ brelse(struct buf *b)
 
   b->flags &= ~B_BUSY;
   wakeup(b);
+  // we must call wakeup before release the 
+  // cache-lock or we will suffer a 'lost wakeup'
+  // problem
 
   release(&bcache.lock);
 }
