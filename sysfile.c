@@ -256,7 +256,7 @@ create(char *path, short type, short major, short minor)
   }
 
   if((ip = ialloc(dp->dev, type)) == 0)
-    panic("create: ialloc");
+    panic("create: ialloc"); // code paths should never get here!
 
   ilock(ip);
   ip->major = major;
@@ -270,6 +270,7 @@ create(char *path, short type, short major, short minor)
     // No ip->nlink++ for ".": avoid cyclic ref count.
     if(dirlink(ip, ".", ip->inum) < 0 || dirlink(ip, "..", dp->inum) < 0)
       panic("create dots");
+	  // if we simply return 0 here, it's not simple actually :)
   }
 
   if(dirlink(dp, name, ip->inum) < 0)
@@ -386,6 +387,9 @@ sys_chdir(void)
   }
   iunlock(ip);
   iput(proc->cwd);
+  // order of iunlock and iput is important 
+  // if we reverse the order, deadlock may 
+  // occur in case proc->cwd equals ip already
   end_op();
   proc->cwd = ip;
   return 0;

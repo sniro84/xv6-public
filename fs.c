@@ -188,11 +188,12 @@ ialloc(uint dev, short type)
       dip->type = type;
       log_write(bp);   // mark it allocated on the disk
       brelse(bp);
-      return iget(dev, inum);
-    }
+      return iget(dev, inum); // success or panic when no 
+	                          // room for in-mem inode 
+     }
     brelse(bp);
   }
-  panic("ialloc: no inodes");
+  panic("ialloc: no inodes"); // no free inodes on disk
 }
 
 // Copy a modified in-memory inode to disk.
@@ -353,6 +354,7 @@ iunlockput(struct inode *ip)
 
 // Return the disk block address of the nth block in inode ip.
 // If there is no such block, bmap allocates one.
+
 static uint
 bmap(struct inode *ip, uint bn)
 {
@@ -382,6 +384,63 @@ bmap(struct inode *ip, uint bn)
 
   panic("bmap: out of range");
 }
+
+
+/*
+// Homework: bigger files
+static uint
+bnum(uint dev, uint blockno, uint index) 
+{
+  uint addr, *a;
+  struct buf *bp;
+   
+  bp = bread(dev, blockno);
+  a = (uint*)bp->data;
+  if((addr = a[index]) == 0){
+    a[index] = addr = balloc(dev);
+    log_write(bp);
+  }
+  brelse(bp);
+  
+  // cprintf("bnum returns %d\n", addr);
+  return addr;
+}
+
+static uint
+bmap(struct inode *ip, uint bn)
+{
+  uint ndirect = 11;
+  uint nsindirect = 128;
+  uint ndindirect = nsindirect * nsindirect;
+
+  uint addr;
+
+  if (bn < ndirect) {
+    if ((addr = ip->addrs[bn]) == 0)
+      ip->addrs[bn] = addr = balloc(ip->dev);
+    return addr;
+  }
+  bn -= ndirect;
+
+  if (bn < nsindirect) {
+    if ((addr = ip->addrs[ndirect]) == 0)
+      ip->addrs[ndirect] = addr = balloc(ip->dev);
+    
+    return bnum(ip->dev, addr, bn);
+  }
+  bn -= nsindirect;
+
+  if (bn < ndindirect) {
+    if ((addr = ip->addrs[ndirect + 1]) == 0)
+      ip->addrs[ndirect + 1] = addr = balloc(ip->dev);
+    
+    addr = bnum(ip->dev, addr, bn / nsindirect);
+    return bnum(ip->dev, addr, bn % nsindirect);
+  }
+
+  panic("bmap: out of range");
+}
+*/
 
 // Truncate inode (discard contents).
 // Only called when the inode has no links

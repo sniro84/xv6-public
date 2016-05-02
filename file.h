@@ -22,7 +22,9 @@ struct inode {
   short nlink;
   uint size;
   uint addrs[NDIRECT+1];
+  //uint addrs[NDIRECT+2];  // Homework: bigger files
 };
+
 #define I_BUSY 0x1
 #define I_VALID 0x2
 
