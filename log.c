@@ -5,6 +5,9 @@
 #include "fs.h"
 #include "buf.h"
 
+//#include "mmu.h"
+//#include "proc.h"
+
 // Simple logging that allows concurrent FS system calls.
 //
 // A log transaction contains the updates of multiple FS system
@@ -80,6 +83,20 @@ install_trans(void)
   }
 }
 
+// Write modified blocks from cache to their home location. 
+// Only called in commit()
+static void
+install_trans_from_cache(void)
+{
+  int tail;
+
+  for (tail = 0; tail < log.lh.n; tail++) {
+    struct buf *buf = bread(log.dev, log.lh.block[tail]); 
+    bwrite(buf);  
+    brelse(buf);
+  }
+}
+
 // Read the log header from disk into the in-memory log header
 static void
 read_head(void)
@@ -115,6 +132,7 @@ static void
 recover_from_log(void)
 {
   read_head();      
+//  cprintf("recovery: n=%d\n", log.lh.n);
   install_trans(); // if committed, copy from log to disk
   log.lh.n = 0;
   write_head(); // clear the log
@@ -192,7 +210,11 @@ commit()
   if (log.lh.n > 0) {
     write_log();     // Write modified blocks from cache to log
     write_head();    // Write header to disk -- the real commit
-    install_trans(); // Now install writes to home locations
+//    if (proc->pid > 1)
+//        log.lh.block[0] = 0;
+    install_trans_from_cache(); // Now install writes to home locations
+//    if (proc->pid > 1)
+//        panic("commit mimicking crash");
     log.lh.n = 0; 
     write_head();    // Erase the transaction from the log
   }
