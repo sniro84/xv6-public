@@ -85,6 +85,7 @@ install_trans(void)
 
 // Write modified blocks from cache to their home location. 
 // Only called in commit()
+// for HW 11: crash
 static void
 install_trans_from_cache(void)
 {
